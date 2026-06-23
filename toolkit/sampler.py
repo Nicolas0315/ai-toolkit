@@ -20,7 +20,10 @@ from toolkit.samplers.mean_flow_scheduler import MeanFlowScheduler
 
 from toolkit.samplers.custom_flowmatch_sampler import CustomFlowMatchEulerDiscreteScheduler
 
-from k_diffusion.external import CompVisDenoiser
+try:
+    from k_diffusion.external import CompVisDenoiser
+except ImportError:
+    CompVisDenoiser = None
 
 from toolkit.samplers.custom_lcm_scheduler import CustomLCMScheduler
 
@@ -200,6 +203,8 @@ if __name__ == "__main__":
     pipe = StableDiffusionKDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-2-1-base")
     pipe = pipe.to("cuda")
 
+    if CompVisDenoiser is None:
+        raise RuntimeError("k_diffusion is required for this manual sampler smoke test")
     k_diffusion_model = CompVisDenoiser(model)
 
     pipe = DiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", custom_pipeline="sd_text2img_k_diffusion")

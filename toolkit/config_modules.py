@@ -4,9 +4,15 @@ from typing import List, Optional, Literal, Tuple, Union, TYPE_CHECKING, Dict
 import random
 
 import torch
-import torchaudio
+try:
+    import torchaudio
+except ImportError:
+    torchaudio = None
 
-from toolkit.audio.album_artwork import add_album_artwork
+try:
+    from toolkit.audio.album_artwork import add_album_artwork
+except ImportError:
+    add_album_artwork = None
 from toolkit.prompt_utils import PromptEmbeds
 from torchao.quantization.quant_primitives import _DTYPE_TO_BIT_WIDTH
 
@@ -1227,6 +1233,8 @@ class GenerateImageConfig:
         elif self.output_ext in ['wav', 'mp3', 'flac', 'ogg']:
             # save audio file
             audio_path = self.get_image_path(count, max_count)
+            if torchaudio is None:
+                raise RuntimeError("torchaudio is required for audio output")
             torchaudio.save(
                 audio_path, 
                 image[0].to('cpu'),
@@ -1234,7 +1242,7 @@ class GenerateImageConfig:
                 format=None, 
                 backend=None
             )
-            if self.output_ext == 'mp3':
+            if self.output_ext == 'mp3' and add_album_artwork is not None:
                 add_album_artwork(audio_path)
         else:
             # TODO save image gen header info for A1111 and us, our seeds probably wont match
